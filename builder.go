@@ -23,7 +23,7 @@ var (
 	recurseFailFirst     = false
 	thriftAddtionalFlags = stringSlice{value: []string{}}
 	thriftBinaryLocation = "thrift-0.13.0"
-	thriftgoPlugins      = stringSlice{value: []string{}}
+	thriftgoPlugins      = stringLiteralSlice{}
 	outGenDir            = "./dist"
 	dirPath              = "./idl/thrift"
 
@@ -37,6 +37,17 @@ var (
 
 	maxParalelTaskChanBufSz = 512
 )
+
+type stringLiteralSlice []string
+
+func (s *stringLiteralSlice) Set(p string) error {
+	*s = append(*s, p)
+	return nil
+}
+
+func (s *stringLiteralSlice) String() string {
+	return ""
+}
 
 type stringSlice struct {
 	value        []string
@@ -150,8 +161,10 @@ func buildThriftCmd(path string, addtFlags []string) *exec.Cmd {
 		"--gen", genLang, // generate params
 	}
 	// append thriftgo plugin flags
-	if len(thriftgoPlugins.value) > 0 {
-		args = append(args, "-p", strings.Join(thriftgoPlugins.value, ","))
+	if len(thriftgoPlugins) > 0 {
+		for _, val := range thriftgoPlugins {
+			args = append(args, "-p", val)
+		}
 	}
 	// append additional compile flags
 	args = append(args, addtFlags...)
@@ -180,7 +193,7 @@ func postArgParse() error {
 	if len(dirPath) == 0 {
 		return fmt.Errorf("dir path source cannot be empty")
 	}
-	fmt.Println("used plugins:", thriftgoPlugins.value)
+	fmt.Println("used plugins:", thriftgoPlugins)
 	return nil
 }
 
